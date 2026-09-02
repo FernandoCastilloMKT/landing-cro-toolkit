@@ -39,7 +39,3 @@ La plantilla no envía datos mientras `formEndpoint` esté vacío. No guardes cl
 ## Colaborar
 
 Las mejoras se proponen mediante Issues y Pull Requests. Consulta [CONTRIBUTING.md](CONTRIBUTING.md) y [SECURITY.md](SECURITY.md).
-
-## Licencia
-
-MIT. Consulta [LICENSE](LICENSE).
