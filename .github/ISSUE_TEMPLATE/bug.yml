@@ -1,0 +1,25 @@
+name: Error
+description: Comunica un fallo reproducible sin incluir datos sensibles.
+title: "[Bug]: "
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: "No publiques credenciales, vulnerabilidades explotables ni datos personales. Usa Security para vulnerabilidades."
+  - type: textarea
+    id: description
+    attributes:
+      label: Descripción
+      description: ¿Qué ocurrió y qué esperabas?
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Pasos para reproducir
+    validations:
+      required: true
+  - type: textarea
+    id: environment
+    attributes:
+      label: Navegador y dispositivo

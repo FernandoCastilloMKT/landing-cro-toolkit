@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Plantilla ficticia para una landing orientada a conversión.">
+    <title>Plantilla CRO | Demostración</title>
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%2310221d'/%3E%3Cpath d='M18 43V21h9c8 0 13 4 13 11s-5 11-13 11h-9Zm7-6h2c4 0 6-2 6-5s-2-5-6-5h-2v10Z' fill='%23fff'/%3E%3C/svg%3E">
+    <link rel="stylesheet" href="styles.css">
+    <script src="config.js" defer></script>
+    <script src="script.js" defer></script>
+  </head>
+  <body>
+    <a class="skip-link" href="#contenido">Saltar al contenido</a>
+    <header class="site-header">
+      <a class="brand" href="#" aria-label="Inicio" data-brand>[MARCA DE DEMOSTRACIÓN]</a>
+      <a class="phone" data-phone href="#contacto" aria-label="Ir al formulario">[TELÉFONO]</a>
+    </header>
+
+    <main id="contenido">
+      <section class="hero" aria-labelledby="hero-title">
+        <div>
+          <p class="eyebrow">EJEMPLO FICTICIO · SUSTITUIR CON INFORMACIÓN VERIFICADA</p>
+          <h1 id="hero-title">Explica el resultado principal con claridad</h1>
+          <p class="lead">Indica para quién es la solución, cómo ayuda y qué ocurrirá al contactar. Evita cifras o promesas sin una fuente válida.</p>
+          <div class="actions">
+            <a class="button" href="#contacto" data-track="cta_click">Solicitar información</a>
+            <a class="text-link" href="#como-funciona">Ver cómo funciona</a>
+          </div>
+          <ul class="trust-list" aria-label="Motivos verificables de confianza">
+            <li>[Beneficio verificable]</li>
+            <li>[Condición transparente]</li>
+            <li>[Cobertura o disponibilidad real]</li>
+          </ul>
+        </div>
+        <aside class="proof-card" aria-label="Espacio para prueba">
+          <span>PRUEBA</span>
+          <strong>Añade aquí evidencia autorizada</strong>
+          <p>Puede ser un dato con fuente, una acreditación vigente o un caso con permiso.</p>
+        </aside>
+      </section>
+
+      <section class="section" id="como-funciona" aria-labelledby="process-title">
+        <p class="eyebrow">PROCESO</p>
+        <h2 id="process-title">Reduce la incertidumbre en tres pasos</h2>
+        <div class="steps">
+          <article><b>1</b><h3>Cuéntanos tu caso</h3><p>Solicita únicamente los datos imprescindibles.</p></article>
+          <article><b>2</b><h3>Recibe una valoración</h3><p>Explica el plazo y el alcance reales del contacto.</p></article>
+          <article><b>3</b><h3>Decide sin sorpresas</h3><p>Muestra condiciones, límites y siguiente paso.</p></article>
+        </div>
+      </section>
+
+      <section class="section form-section" id="contacto" aria-labelledby="form-title">
+        <div>
+          <p class="eyebrow">CONTACTO</p>
+          <h2 id="form-title">Solicita información</h2>
+          <p>Esta demostración no enviará datos hasta configurar un endpoint seguro.</p>
+        </div>
+        <form id="lead-form" novalidate>
+          <label>Nombre <input name="name" autocomplete="name" required></label>
+          <label>Teléfono <input name="phone" type="tel" autocomplete="tel" inputmode="tel" required></label>
+          <label>Email <input name="email" type="email" autocomplete="email" required></label>
+          <label class="checkbox"><input name="privacy" type="checkbox" required> <span>He leído y acepto la <a data-privacy href="#">política de privacidad</a>.</span></label>
+          <button class="button" type="submit">Enviar solicitud</button>
+          <p class="form-status" id="form-status" role="status" aria-live="polite"></p>
+        </form>
+      </section>
+    </main>
+
+    <footer><span data-brand>[MARCA DE DEMOSTRACIÓN]</span> · Contenido ficticio para desarrollo.</footer>
+  </body>
+</html>

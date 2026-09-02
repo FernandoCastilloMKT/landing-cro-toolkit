@@ -1,0 +1,17 @@
+name: Mejora
+description: Propón una mejora de CRO, diseño, accesibilidad o calidad.
+title: "[Mejora]: "
+labels: [enhancement]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problema que resolvería
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Propuesta
+    validations:
+      required: true
