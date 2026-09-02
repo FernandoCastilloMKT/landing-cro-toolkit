@@ -4,6 +4,12 @@ Kit abierto y neutral para crear landings orientadas a conversión, campañas de
 
 > Todo el contenido de demostración es ficticio. Sustituye los marcadores, aporta fuentes y valida legalmente cada afirmación antes de usarlo en producción.
 
+## Límite de privacidad
+
+Este repositorio es público y tiene un historial completamente independiente. Solo admite metodología y ejemplos originales, ficticios y anonimizados. No deben copiarse aquí proyectos privados ni nombres, recursos, textos, capturas, contactos, dominios, métricas, configuraciones o identificadores de agencias, clientes, campañas o infraestructura. Cambiar nombres no convierte material confidencial en material público.
+
+Las reglas completas para personas y agentes están en [AGENTS.md](AGENTS.md).
+
 ## Qué incluye
 
 - `template/`: landing estática, responsive y accesible.
