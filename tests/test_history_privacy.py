@@ -17,6 +17,28 @@ class HistoryPrivacyTests(unittest.TestCase):
         self.assertIsNone(pattern.search('123+demo' + '@' + 'users.noreply.github.com'))
         self.assertIsNone(pattern.search('alerts' + '@' + 'example.invalid'))
 
+    def test_github_merge_identity_is_safe_but_private_author_is_not(self):
+        with tempfile.TemporaryDirectory() as directory:
+            env = dict(os.environ, GIT_AUTHOR_NAME='Demo', GIT_COMMITTER_NAME='GitHub',
+                       GIT_AUTHOR_EMAIL='123+demo' + '@' + 'users.noreply.github.com',
+                       GIT_COMMITTER_EMAIL='noreply' + '@' + 'github.com')
+            def git(*args):
+                subprocess.run(['git', '-C', directory, *args], check=True,
+                               env=env, capture_output=True)
+            git('init')
+            path = Path(directory) / 'sample.txt'
+            path.write_text('Generic example', encoding='utf-8')
+            git('add', '.')
+            git('-c', 'commit.gpgsign=false', 'commit', '-m', 'Example')
+            self.assertEqual(audit.history_findings(Path(directory), 'HEAD'), [])
+            env['GIT_AUTHOR_EMAIL'] = 'private' + '@' + 'mail.test'
+            path.write_text('Updated generic example', encoding='utf-8')
+            git('add', '.')
+            git('-c', 'commit.gpgsign=false', 'commit', '-m', 'Update example')
+            findings = audit.history_findings(Path(directory), 'HEAD')
+            self.assertTrue(any('personal email' in finding for finding in findings))
+            self.assertNotIn(env['GIT_AUTHOR_EMAIL'], str(findings))
+
     def test_deleted_email_and_author_are_reported_without_values(self):
         with tempfile.TemporaryDirectory() as d:
             env = dict(os.environ, GIT_AUTHOR_NAME='Demo', GIT_COMMITTER_NAME='Demo',
