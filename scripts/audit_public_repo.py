@@ -10,7 +10,10 @@ import subprocess
 from pathlib import Path
 
 IGNORED_DIRS = {".git", "node_modules", "dist", "build", "coverage", "__pycache__"}
-BLOCKED_NAMES = {".env", "id_rsa", "id_ed25519", "credentials.json", "service-account.json"}
+BLOCKED_NAMES = {".env", "id_rsa", "id_ed25519", "credentials.json", "service-account.json",
+                 ".clasp.json", ".clasprc.json", ".webapp-deployment.json"}
+BLOCKED_DIRS = {"credentials", ".secrets", ".ssh", ".openai", ".playwright-cli"}
+BLOCKED_SUFFIXES = {".pem", ".key", ".p12", ".pfx", ".har", ".sqlite", ".7z", ".zip"}
 TEXT_LIMIT = 2_000_000
 FILE_LIMIT = 10_000_000
 PATTERNS = {
@@ -22,16 +25,40 @@ PATTERNS = {
     "GitHub token": re.compile(r"(?:gh[pousr]_[A-Za-z0-9]{20,}|github_pat_[A-Za-z0-9_]{40,})"),
     "OpenAI-style key": re.compile(r"\bsk-[A-Za-z0-9_-]{20,}\b"),
     "Google API key": re.compile(r"\bAIza[0-9A-Za-z_-]{30,}\b"),
+    "Google OAuth secret": re.compile(r"\bGOCSPX-[A-Za-z0-9_-]{20,}\b"),
+    "Google refresh token": re.compile(r"(?<!\w)1//[A-Za-z0-9_-]{30,}"),
+    "Google OAuth client": re.compile(r"\b\d{8,}-[a-z0-9_-]{16,}\.apps\.googleusercontent\.com\b", re.I),
+    "Meta access token": re.compile(r"\bEA[A-Za-z0-9]{60,}\b"),
+    "JWT": re.compile(r"\beyJ[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}\b"),
+    "advertising identifier": re.compile(r"(?<!\d)(?!000-000-0000)\d{3}-\d{3}-\d{4}(?!\d)"),
+    "measurement identifier": re.compile(r"\b(?:GTM-[A-Z0-9]{6,}|G-[A-Z0-9]{10})\b"),
+    "spreadsheet URL": re.compile(r"/spreadsheets/d/(?!EXAMPLE_)[A-Za-z0-9_-]{24,}"),
     "AWS access key": re.compile(r"\b(?:AKIA|ASIA)[A-Z0-9]{16}\b"),
-    "Windows user path": re.compile(r"(?i)[A-Z]:\\Users\\[^\\\s]+"),
+    "Windows user path": re.compile(r"(?i)[A-Z]:[\\/]Users[\\/][^\\/\s]+"),
 }
 
 
-def history_findings(root: Path, revision: str) -> list[str]:
+def blocked_path(path: Path) -> bool:
+    name = path.name.lower()
+    return (name in BLOCKED_NAMES or (name.startswith('.env.') and name != '.env.example')
+            or bool(set(path.parts) & BLOCKED_DIRS) or path.suffix.lower() in BLOCKED_SUFFIXES)
+
+
+def confidential_match(text: str, terms) -> bool:
+    return any(re.search(r'[\s_.-]*'.join(re.escape(p) for p in term.split()), text, re.I)
+               for term in terms if term.strip())
+
+
+def history_findings(root: Path, revision: str, deny_terms=()) -> list[str]:
     """Check commit identities/messages and patches, including deleted text.
 
     Only report commit hashes and rule names; never print the matched value.
     """
+    actual_root = subprocess.check_output(
+        ['git', '-C', str(root), 'rev-parse', '--show-toplevel'], text=True,
+    ).strip()
+    if Path(actual_root).resolve() != root.resolve():
+        return ['history root is not an independent Git checkout']
     shallow = subprocess.check_output(
         ["git", "-C", str(root), "rev-parse", "--is-shallow-repository"], text=True
     ).strip()
@@ -51,6 +78,13 @@ def history_findings(root: Path, revision: str) -> list[str]:
         for label, pattern in PATTERNS.items():
             if pattern.search(text):
                 findings.append(f"{label}: commit {commit}")
+        if confidential_match(text, deny_terms):
+            findings.append(f"confidential deny-term: commit {commit}")
+        names = subprocess.check_output(
+            ['git', '-C', str(root), 'ls-tree', '-r', '--name-only', commit], text=True,
+        ).splitlines()
+        if any(blocked_path(Path(name)) for name in names):
+            findings.append(f"blocked historical path: commit {commit}")
     return findings
 
 
@@ -64,33 +98,37 @@ def main() -> int:
     findings: list[str] = []
     if args.history:
         try:
-            findings.extend(history_findings(root, args.history))
+            findings.extend(history_findings(root, args.history, args.deny_term))
         except subprocess.CalledProcessError:
             findings.append("cannot read requested Git history")
 
     for path in sorted(root.rglob("*")):
         relative = path.relative_to(root)
-        if any(part in IGNORED_DIRS for part in relative.parts) or not path.is_file():
+        if any(part in IGNORED_DIRS for part in relative.parts) or (not path.is_file() and not path.is_symlink()):
             continue
-        lowered = path.name.lower()
-        if lowered in BLOCKED_NAMES or (lowered.startswith(".env.") and lowered != ".env.example"):
+        if blocked_path(relative):
             findings.append(f"blocked filename: {relative}")
+        if path.is_symlink():
+            findings.append(f"symlink not allowed: {relative}")
+            continue
         size = path.stat().st_size
         if size > FILE_LIMIT:
             findings.append(f"file larger than {FILE_LIMIT} bytes: {relative}")
         if size > TEXT_LIMIT:
+            findings.append(f"file too large for text audit: {relative}")
             continue
         try:
             content = path.read_text(encoding="utf-8")
         except UnicodeDecodeError:
+            if path.suffix.lower() not in {'.png', '.jpg', '.jpeg', '.webp', '.gif', '.ico', '.woff', '.woff2'}:
+                findings.append(f"unreadable non-media file: {relative}")
             continue
         for label, pattern in PATTERNS.items():
             if pattern.search(content):
                 findings.append(f"{label}: {relative}")
         haystack = f"{relative}\n{content}".casefold()
-        for term in args.deny_term:
-            if term and term.casefold() in haystack:
-                findings.append(f"confidential deny-term: {relative}")
+        if confidential_match(haystack, args.deny_term):
+            findings.append(f"confidential deny-term: {relative}")
 
     if findings:
         print("Audit failed:")
