@@ -39,6 +39,8 @@ class HistoryPrivacyTests(unittest.TestCase):
             env['GIT_AUTHOR_EMAIL'] = secret
             git('-c', 'commit.gpgsign=false', 'commit', '--allow-empty', '-m', 'Identity check')
             self.assertGreater(len(audit.history_findings(Path(d), 'HEAD')), len(findings))
+            denied = audit.history_findings(Path(d), 'HEAD', ['Example'])
+            self.assertTrue(any('confidential deny-term' in item for item in denied))
 
 
 if __name__ == '__main__':
